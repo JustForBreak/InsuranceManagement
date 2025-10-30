@@ -6,32 +6,37 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 
-export default function Home() {
+export default function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage('');
 
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch('/api/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, firstName, lastName }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setMessage('Login successful!');
+        setMessage('Registration successful! Redirecting to login...');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
       } else {
-        setMessage(data.message || 'Login failed');
+        setMessage(data.message || 'Registration failed');
       }
     } catch (error) {
       setMessage('Connection failed. Please try again.');
@@ -44,10 +49,28 @@ export default function Home() {
     <div className="flex min-h-screen items-center justify-center bg-white">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center">Insurance Management</CardTitle>
+          <CardTitle className="text-center">Create Account</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
             <div className="space-y-2">
               <Input
                 type="email"
@@ -67,7 +90,7 @@ export default function Home() {
               />
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Logging in...' : 'Login'}
+              {isLoading ? 'Creating account...' : 'Register'}
             </Button>
           </form>
           {message && (
@@ -80,13 +103,10 @@ export default function Home() {
             </div>
           )}
           <div className="mt-4 text-sm text-gray-600 text-center">
-            Don't have an account?{' '}
-            <Link href="/register" className="text-black font-medium hover:underline">
-              Register here
+            Already have an account?{' '}
+            <Link href="/" className="text-black font-medium hover:underline">
+              Login here
             </Link>
-          </div>
-          <div className="mt-2 text-xs text-gray-500 text-center">
-            Test credentials: admin@example.com / password123
           </div>
         </CardContent>
       </Card>

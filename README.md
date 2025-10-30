@@ -1,42 +1,44 @@
 # Insurance Management System
 
-A simple full-stack insurance management application built with Next.js, Express, PostgreSQL, and deployed on Railway.
+A simple full-stack insurance management application built with Next.js, PostgreSQL, and deployed on Railway.
 
 ## Features
 
-- User authentication (static credentials for demo)
+- User authentication with registration and login
 - Database connectivity with PostgreSQL
 - Simple, clean UI using Shadcn components
-- No gradients, emojis, or excessive colors
+- Next.js API routes for backend logic
 
 ## Tech Stack
 
 - **Frontend**: Next.js 16, React, TypeScript, Tailwind CSS, Shadcn UI
-- **Backend**: Express.js, Node.js
+- **Backend**: Next.js API Routes
 - **Database**: PostgreSQL
 - **Deployment**: Railway
-- **Package Manager**: npm (configured for Bun)
 
 ## Project Structure
 
 ```
-├── src/                    # Next.js frontend
-├── backend/               # Express backend API
-├── schema.sql            # Database schema
-├── db-test.js            # Database connectivity test script
-└── railway.json          # Railway deployment config
+├── src/
+│   ├── app/
+│   │   ├── api/           # API routes (login, register)
+│   │   ├── register/      # Registration page
+│   │   └── page.tsx       # Login page
+│   └── components/ui/     # Shadcn components
+├── schema.sql             # Database schema
+└── railway.json           # Railway deployment config
 ```
 
 ## Development Setup
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20.9.0+ (required for Next.js 16)
 - PostgreSQL (local or Railway)
 
 ### Installation
 
-1. Clone and install dependencies:
+1. Install dependencies:
 ```bash
 npm install
 ```
@@ -56,22 +58,11 @@ DB_PASSWORD=your_password
 
 ### Running the Application
 
-1. Start the backend:
-```bash
-cd backend && npm start
-```
-
-2. Start the frontend:
 ```bash
 npm run dev
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000)
-
-### Test Credentials
-
-- Email: `admin@example.com`
-- Password: `password123`
+Open [http://localhost:3000](http://localhost:3000)
 
 ## Spikes Completed
 
@@ -88,6 +79,10 @@ npm run dev
 - Confirmed API communication between frontend and backend
 
 ## Deployment to Railway
+
+### Node.js Configuration
+
+The app is configured to use Node.js 20+ (required for Next.js 16) via `nixpacks.toml` and `.nvmrc` files.
 
 ### Database Setup
 
