@@ -56,7 +56,25 @@ export async function POST(request: NextRequest) {
       from: 'onboarding@resend.dev',
       to: email,
       subject: 'You signed up to the app',
-      html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
+      html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #333;">Welcome to Insurance Portal!</h1>
+              <p>Hi <strong>${firstName} ${lastName}</strong>,</p>
+              <p>Your account has been successfully created with the following details:</p>
+              <ul>
+                <li><strong>Email:</strong> ${email}</li>
+                <li><strong>Account Type:</strong> ${role === 'agent' ? 'Agent' : 'Customer'}</li>
+              </ul>
+              <p>You can now log in to access your dashboard and manage your insurance policies.</p>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}" 
+                 style="display: inline-block; padding: 12px 24px; background-color: #000; color: #fff; text-decoration: none; border-radius: 5px; margin-top: 20px;">
+                Login to Dashboard
+              </a>
+              <p style="margin-top: 30px; color: #666; font-size: 12px;">
+                If you didn't create this account, please ignore this email.
+              </p>
+            </div>
+          `
     });
     return NextResponse.json({
       success: true,
