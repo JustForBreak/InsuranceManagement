@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 
 export default function Home() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -29,7 +31,10 @@ export default function Home() {
       const data = await response.json();
 
       if (data.success) {
-        setMessage('Login successful!');
+        // Determine role based on email (arbitrary for now)
+        const role = email.toLowerCase().includes('admin') ? 'admin' : 'user';
+        // Redirect to dashboard with role parameter
+        router.push(`/dashboard?role=${role}`);
       } else {
         setMessage(data.message || 'Login failed');
       }
