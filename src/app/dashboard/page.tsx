@@ -1,8 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { useSearchParams } from 'next/navigation'
-import { Suspense } from 'react'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SiteHeader } from '@/components/site-header'
 import {
@@ -12,9 +12,51 @@ import {
 import { AdminDashboard } from '@/components/admin-dashboard'
 import { UserDashboard } from '@/components/user-dashboard'
 
+interface User {
+  id: number
+  email: string
+  name: string
+  role: string
+}
+
 function DashboardContent() {
-  const searchParams = useSearchParams()
-  const role = searchParams.get('role') || 'user'
+  const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    // Check if user is logged in
+    const userData = localStorage.getItem('user')
+    if (!userData) {
+      router.push('/')
+      return
+    }
+
+    try {
+      const parsedUser = JSON.parse(userData)
+      setUser(parsedUser)
+    } catch (error) {
+      console.error('Error parsing user data:', error)
+      router.push('/')
+    } finally {
+      setIsLoading(false)
+    }
+  }, [router])
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div>Loading...</div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
+  }
+
+  // Map agent/customer to admin/user for dashboard components
+  const dashboardRole = user.role === 'agent' ? 'admin' : 'user'
 
   return (
     <SidebarProvider
@@ -25,13 +67,13 @@ function DashboardContent() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" role={role} />
+      <AppSidebar variant="inset" role={dashboardRole} />
       <SidebarInset>
-        <SiteHeader role={role} />
+        <SiteHeader role={dashboardRole} />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-              {role === 'admin' ? <AdminDashboard /> : <UserDashboard />}
+              {dashboardRole === 'admin' ? <AdminDashboard /> : <UserDashboard />}
             </div>
           </div>
         </div>
@@ -41,9 +83,5 @@ function DashboardContent() {
 }
 
 export default function Page() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <DashboardContent />
-    </Suspense>
-  )
+  return <DashboardContent />
 }

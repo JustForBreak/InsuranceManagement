@@ -31,10 +31,13 @@ export default function Home() {
       const data = await response.json();
 
       if (data.success) {
-        // Determine role based on email (arbitrary for now)
-        const role = email.toLowerCase().includes('admin') ? 'admin' : 'user';
-        // Redirect to dashboard with role parameter
-        router.push(`/dashboard?role=${role}`);
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setMessage('Login successful! Redirecting to dashboard...');
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
       } else {
         setMessage(data.message || 'Login failed');
       }

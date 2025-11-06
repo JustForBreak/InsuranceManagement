@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import { Resend } from 'resend';
 
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -12,11 +13,19 @@ const pool = new Pool({
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, firstName, lastName } = await request.json();
+    const { email, password, firstName, lastName, role } = await request.json();
 
-    if (!email || !password || !firstName || !lastName) {
+    if (!email || !password || !firstName || !lastName || !role) {
       return NextResponse.json(
         { success: false, message: 'All fields are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate role
+    if (role !== 'agent' && role !== 'customer') {
+      return NextResponse.json(
+        { success: false, message: 'Invalid role. Must be "agent" or "customer"' },
         { status: 400 }
       );
     }
@@ -36,19 +45,29 @@ export async function POST(request: NextRequest) {
 
     // Create new user (Note: In production, hash the password!)
     const result = await pool.query(
-      'INSERT INTO users (email, password_hash, first_name, last_name) VALUES ($1, $2, $3, $4) RETURNING id, email, first_name, last_name',
-      [email, password, firstName, lastName]
+      'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, role',
+      [email, password, firstName, lastName, role]
     );
 
     const newUser = result.rows[0];
+    const resend = new Resend(
+      process.env.RESEND_API_KEY
+    );
 
+    resend.emails.send({
+      from: 'onboarding@resend.dev',
+      to: email,
+      subject: 'You signed up to the app',
+      html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
+    });
     return NextResponse.json({
       success: true,
       message: 'Registration successful',
       user: {
         id: newUser.id,
         email: newUser.email,
-        name: `${newUser.first_name} ${newUser.last_name}`
+        name: `${newUser.first_name} ${newUser.last_name}`,
+        role: newUser.role
       }
     });
   } catch (error) {
