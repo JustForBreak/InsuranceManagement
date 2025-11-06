@@ -50,13 +50,17 @@ export async function POST(request: NextRequest) {
     );
 
     const newUser = result.rows[0];
-    const resend = new Resend(process.env.RESEND_API_KEY);
-
-    resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: email,
-      subject: 'You signed up to the app',
-      html: `
+    
+    // Send welcome email (non-blocking - don't fail registration if email fails)
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY);
+        
+        await resend.emails.send({
+          from: 'Insurance Portal <onboarding@resend.dev>',
+          to: email,
+          subject: 'Welcome to Insurance Management!',
+          html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <h1 style="color: #333;">Welcome to Insurance Portal!</h1>
               <p>Hi <strong>${firstName} ${lastName}</strong>,</p>
@@ -75,10 +79,20 @@ export async function POST(request: NextRequest) {
               </p>
             </div>
           `
-    });
+        });
+        console.log('✅ Welcome email sent successfully to:', email);
+      } catch (emailError) {
+        // Log error but don't fail registration
+        console.error('⚠️ Failed to send welcome email:', emailError);
+        console.log('ℹ️ Registration completed successfully despite email failure');
+      }
+    } else {
+      console.log('⚠️ RESEND_API_KEY not configured - skipping welcome email');
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Registration successful',
+      message: 'Registration successful! Please check your email for confirmation.',
       user: {
         id: newUser.id,
         email: newUser.email,
@@ -87,7 +101,7 @@ export async function POST(request: NextRequest) {
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('❌ Registration error:', error);
     return NextResponse.json(
       { success: false, message: 'Database error during registration' },
       { status: 500 }
