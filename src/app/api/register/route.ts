@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
-import { Resend } from 'resend';
 
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -43,23 +42,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new user (Note: In production, hash the password!)
+    // Create new user (Note: In production, hash the password with bcrypt!)
     const result = await pool.query(
       'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, role',
       [email, password, firstName, lastName, role]
     );
 
     const newUser = result.rows[0];
-    const resend = new Resend(
-      process.env.RESEND_API_KEY
-    );
 
-    resend.emails.send({
-      from: 'onboarding@resend.dev',
-      to: email,
-      subject: 'You signed up to the app',
-      html: '<p>Congrats on sending your <strong>first email</strong>!</p>'
-    });
     return NextResponse.json({
       success: true,
       message: 'Registration successful',
