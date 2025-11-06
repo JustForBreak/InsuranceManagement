@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 
 export default function Home() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -29,7 +31,13 @@ export default function Home() {
       const data = await response.json();
 
       if (data.success) {
-        setMessage('Login successful!');
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setMessage('Login successful! Redirecting to dashboard...');
+        // Redirect to dashboard after a short delay
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
       } else {
         setMessage(data.message || 'Login failed');
       }

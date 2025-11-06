@@ -11,6 +11,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [role, setRole] = useState<'agent' | 'customer'>('customer');
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -25,7 +26,7 @@ export default function Register() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password, firstName, lastName }),
+        body: JSON.stringify({ email, password, firstName, lastName, role }),
       });
 
       const data = await response.json();
@@ -88,6 +89,33 @@ export default function Register() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Role</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="customer"
+                    checked={role === 'customer'}
+                    onChange={(e) => setRole(e.target.value as 'customer')}
+                    className="w-4 h-4"
+                  />
+                  <span>Customer</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="role"
+                    value="agent"
+                    checked={role === 'agent'}
+                    onChange={(e) => setRole(e.target.value as 'agent')}
+                    className="w-4 h-4"
+                  />
+                  <span>Agent</span>
+                </label>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? 'Creating account...' : 'Register'}
