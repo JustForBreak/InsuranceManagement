@@ -1,5 +1,6 @@
 -- Insurance Management Database Schema
--- Complete schema for users, policies, claims, and credit profiles tables
+-- Migration 001: Initial Schema Setup
+-- Description: Create users, policies, and credit_profiles tables
 
 -- Create users table with role-based authentication
 CREATE TABLE IF NOT EXISTS users (
@@ -64,3 +65,26 @@ CREATE INDEX IF NOT EXISTS idx_credit_profiles_user_id ON credit_profiles(user_i
 CREATE INDEX IF NOT EXISTS idx_claims_user_id ON claims(user_id);
 CREATE INDEX IF NOT EXISTS idx_claims_policy_id ON claims(policy_id);
 CREATE INDEX IF NOT EXISTS idx_claims_status ON claims(status);
+
+-- Create function to update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create triggers to automatically update updated_at
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_policies_updated_at BEFORE UPDATE ON policies
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_credit_profiles_updated_at BEFORE UPDATE ON credit_profiles
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_claims_updated_at BEFORE UPDATE ON claims
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
