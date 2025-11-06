@@ -1,35 +1,45 @@
-// agentViewCredit.js
-const { Client } = require('pg');
+import { NextRequest, NextResponse } from 'next/server';
+import { Pool } from 'pg';
 
-const client = new Client({
-  host: process.env.DB_HOST || 'localhost',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'insurance_db',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'password',
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
 });
 
-async function getCustomerCreditProfile(email) {
+export async function POST(request: NextRequest) {
   try {
-    await client.connect();
-    console.log(`🔍 Looking up credit profile for ${email}...`);
+    const { email } = await request.json();
 
-    // 1. Find the user
-    const userResult = await client.query(
-      `SELECT id, first_name, last_name, email FROM users WHERE email = $1`,
+    if (!email) {
+      return NextResponse.json(
+        { success: false, message: 'Email is required' },
+        { status: 400 }
+      );
+    }
+
+    //Find the user
+    const userResult = await pool.query(
+      `SELECT id, first_name, last_name, email 
+       FROM users 
+       WHERE email = $1`,
       [email]
     );
 
     if (userResult.rows.length === 0) {
-      console.log('❌ No customer found with that email.');
-      return;
+      return NextResponse.json(
+        { success: false, message: 'No customer found with that email' },
+        { status: 404 }
+      );
     }
 
     const user = userResult.rows[0];
 
-    // 2. Fetch their credit profile
-    const creditResult = await client.query(
+    // Fetch their credit profile
+    const creditResult = await pool.query(
       `SELECT credit_score, risk_level, last_checked 
        FROM credit_profiles 
        WHERE user_id = $1`,
@@ -37,13 +47,15 @@ async function getCustomerCreditProfile(email) {
     );
 
     if (creditResult.rows.length === 0) {
-      console.log('⚠️ No credit profile found for this customer.');
-      return;
+      return NextResponse.json(
+        { success: false, message: 'No credit profile found for this customer' },
+        { status: 404 }
+      );
     }
 
     const credit = creditResult.rows[0];
 
-    // 3. Compute premium adjustment suggestion
+    // Compute premium adjustment suggestion
     let adjustmentFactor;
     switch (credit.risk_level) {
       case 'low':
@@ -59,23 +71,26 @@ async function getCustomerCreditProfile(email) {
         adjustmentFactor = 1.0;
     }
 
-    console.log('\n--- Customer Credit Profile ---');
-    console.log(`Name: ${user.first_name} ${user.last_name}`);
-    console.log(`Email: ${user.email}`);
-    console.log(`Credit Score: ${credit.credit_score}`);
-    console.log(`Risk Level: ${credit.risk_level}`);
-    console.log(`Last Checked: ${credit.last_checked}`);
-    console.log(`Suggested Premium Multiplier: x${adjustmentFactor}`);
-    console.log('--------------------------------');
-
-  } catch (err) {
-    console.error('Error fetching credit profile:', err);
-  } finally {
-    await client.end();
-    console.log('Database connection closed.');
+    //  Return the profile as JSON (to display on the page)
+    return NextResponse.json({
+      success: true,
+      message: 'Customer credit profile retrieved successfully',
+      profile: {
+        name: `${user.first_name} ${user.last_name}`,
+        email: user.email,
+        credit_score: credit.credit_score,
+        risk_level: credit.risk_level,
+        last_checked: credit.last_checked,
+        suggested_multiplier: adjustmentFactor,
+      },
+    });
+  } catch (error) {
+    console.error('Error fetching credit profile:', error);
+    return NextResponse.json(
+      { success: false, message: 'Database error fetching credit profile' },
+      { status: 500 }
+    );
   }
 }
 
-// Example usage:
-getCustomerCreditProfile('john.doe@example.com');
 
