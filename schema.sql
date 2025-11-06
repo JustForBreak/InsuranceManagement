@@ -27,8 +27,20 @@ CREATE TABLE IF NOT EXISTS policies (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Customer Credit Profile Table
+CREATE TABLE IF NOT EXISTS credit_profiles (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    credit_score INTEGER CHECK (credit_score BETWEEN 300 AND 850),
+    risk_level VARCHAR(20), -- 'low', 'medium', 'high'
+    last_checked DATE DEFAULT CURRENT_DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_policies_user_id ON policies(user_id);
 CREATE INDEX IF NOT EXISTS idx_policies_policy_number ON policies(policy_number);
 CREATE INDEX IF NOT EXISTS idx_policies_status ON policies(status);
+CREATE INDEX IF NOT EXISTS idx_credit_profiles_user_id ON credit_profiles(user_id);
