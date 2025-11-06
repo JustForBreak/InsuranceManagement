@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Find user in database
     const result = await pool.query(
-      'SELECT id, email, first_name, last_name, password_hash FROM users WHERE email = $1',
+      'SELECT id, email, first_name, last_name, password_hash, role FROM users WHERE email = $1',
       [email]
     );
 
@@ -50,7 +50,8 @@ export async function POST(request: NextRequest) {
       user: {
         id: user.id,
         email: user.email,
-        name: `${user.first_name} ${user.last_name}`
+        name: `${user.first_name} ${user.last_name}`,
+        role: user.role
       }
     });
   } catch (error) {
