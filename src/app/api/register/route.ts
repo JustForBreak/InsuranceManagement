@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         const resend = new Resend(process.env.RESEND_API_KEY);
         
         await resend.emails.send({
-          from: 'Insurance Portal <onboarding@resend.dev>',
+          from: 'Insurance Portal <insurance@vidova.ai>',
           to: email,
           subject: 'Welcome to Insurance Management!',
           html: `

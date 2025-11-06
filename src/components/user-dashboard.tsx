@@ -45,15 +45,6 @@ interface UserData {
   claimTrends: any[]
 }
 
-interface CreditProfile {
-  name: string
-  email: string
-  credit_score: number
-  risk_level: string
-  last_checked: string
-  suggested_multiplier: number
-}
-
 const chartConfig = {
   approved: {
     label: 'Approved',
@@ -71,9 +62,7 @@ const chartConfig = {
 
 export function UserDashboard() {
   const [data, setData] = useState<UserData | null>(null)
-  const [creditProfile, setCreditProfile] = useState<CreditProfile | null>(null)
   const [loading, setLoading] = useState(true)
-  const [creditLoading, setCreditLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -90,57 +79,6 @@ export function UserDashboard() {
 
     fetchData()
   }, [])
-
-  useEffect(() => {
-    const fetchCreditProfile = async () => {
-      try {
-        // Get user email from localStorage
-        const userData = localStorage.getItem('user')
-        if (!userData) return
-
-        const user = JSON.parse(userData)
-        
-        const response = await fetch('/api/credit', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: user.email }),
-        })
-
-        const result = await response.json()
-        
-        if (result.success) {
-          setCreditProfile(result.profile)
-        }
-      } catch (error) {
-        console.error('Error fetching credit profile:', error)
-      } finally {
-        setCreditLoading(false)
-      }
-    }
-
-    fetchCreditProfile()
-  }, [])
-
-  const getCreditScoreColor = (score: number) => {
-    if (score >= 750) return 'text-green-600 bg-green-50 border-green-200'
-    if (score >= 650) return 'text-yellow-600 bg-yellow-50 border-yellow-200'
-    return 'text-red-600 bg-red-50 border-red-200'
-  }
-
-  const getRiskLevelBadge = (riskLevel: string) => {
-    switch (riskLevel) {
-      case 'low':
-        return <Badge className="bg-green-50 text-green-700 border-green-200">Low Risk</Badge>
-      case 'medium':
-        return <Badge className="bg-yellow-50 text-yellow-700 border-yellow-200">Medium Risk</Badge>
-      case 'high':
-        return <Badge className="bg-red-50 text-red-700 border-red-200">High Risk</Badge>
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
-  }
 
   if (loading || !data) {
     return <div className="flex items-center justify-center p-8">Loading...</div>
@@ -233,77 +171,6 @@ export function UserDashboard() {
           </CardFooter>
         </Card>
       </div>
-
-      {/* Credit Score Card */}
-      {creditProfile && !creditLoading && (
-        <div className="px-4 lg:px-6">
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Credit Score</CardTitle>
-                  <CardDescription>Your insurance credit profile</CardDescription>
-                </div>
-                {getRiskLevelBadge(creditProfile.risk_level)}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-6 md:grid-cols-3">
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Credit Score</div>
-                  <div className={`text-5xl font-bold ${getCreditScoreColor(creditProfile.credit_score)}`}>
-                    {creditProfile.credit_score}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Last checked: {new Date(creditProfile.last_checked).toLocaleDateString()}
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Premium Adjustment</div>
-                  <div className="text-3xl font-bold">
-                    {creditProfile.suggested_multiplier < 1 ? (
-                      <span className="text-green-600">
-                        {((1 - creditProfile.suggested_multiplier) * 100).toFixed(0)}% Discount
-                      </span>
-                    ) : creditProfile.suggested_multiplier > 1 ? (
-                      <span className="text-red-600">
-                        +{((creditProfile.suggested_multiplier - 1) * 100).toFixed(0)}% Surcharge
-                      </span>
-                    ) : (
-                      <span className="text-gray-600">Standard Rate</span>
-                    )}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Multiplier: {creditProfile.suggested_multiplier}x
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="text-sm text-muted-foreground">Credit Rating</div>
-                  <div className="space-y-2">
-                    {creditProfile.credit_score >= 750 && (
-                      <div className="text-lg font-semibold text-green-600">Excellent</div>
-                    )}
-                    {creditProfile.credit_score >= 700 && creditProfile.credit_score < 750 && (
-                      <div className="text-lg font-semibold text-green-600">Good</div>
-                    )}
-                    {creditProfile.credit_score >= 650 && creditProfile.credit_score < 700 && (
-                      <div className="text-lg font-semibold text-yellow-600">Fair</div>
-                    )}
-                    {creditProfile.credit_score < 650 && (
-                      <div className="text-lg font-semibold text-red-600">Needs Improvement</div>
-                    )}
-                    <div className="text-xs text-muted-foreground">
-                      Based on your credit history and risk assessment
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
 
       {/* My Policies Section */}
       <div className="px-4 lg:px-6">

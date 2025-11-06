@@ -14,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { AdminCreditManagement } from '@/components/admin-credit-management'
 import {
   ChartConfig,
   ChartContainer,
@@ -171,6 +172,9 @@ export function AdminDashboard() {
           </CardFooter>
         </Card>
       </div>
+
+      {/* Credit Management Section */}
+      <AdminCreditManagement />
 
       {/* Charts Section */}
       <div className="grid gap-4 px-4 lg:px-6 md:grid-cols-2">
