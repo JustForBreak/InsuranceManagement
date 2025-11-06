@@ -50,9 +50,7 @@ export async function POST(request: NextRequest) {
     );
 
     const newUser = result.rows[0];
-    const resend = new Resend(
-      process.env.RESEND_API_KEY
-    );
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     resend.emails.send({
       from: 'onboarding@resend.dev',
