@@ -1,3 +1,5 @@
+# InsuranceManagement
+=======
 # Insurance Management System
 
 A simple full-stack insurance management application built with Next.js, PostgreSQL, and deployed on Railway.
