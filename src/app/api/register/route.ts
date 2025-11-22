@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
 import { Resend } from 'resend';
+import bcrypt from 'bcryptjs';
 
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -42,11 +43,11 @@ export async function POST(request: NextRequest) {
         { status: 409 }
       );
     }
-
+	const hashedPassword = await bcrypt.hash(password, 10);
     // Create new user (Note: In production, hash the password!)
     const result = await pool.query(
       'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, first_name, last_name, role',
-      [email, password, firstName, lastName, role]
+      [email, hashedPassword, firstName, lastName, role]
     );
 
     const newUser = result.rows[0];

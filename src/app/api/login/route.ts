@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Pool } from 'pg';
+import bcrypt from 'bcryptjs';
 
 const pool = new Pool({
   host: process.env.DB_HOST,
@@ -12,6 +13,7 @@ const pool = new Pool({
 
 export async function POST(request: NextRequest) {
   try {
+		
     const { email, password } = await request.json();
 
     if (!email || !password) {
@@ -22,10 +24,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Find user in database
-    const result = await pool.query(
-      'SELECT id, email, first_name, last_name, password_hash, role FROM users WHERE email = $1',
-      [email]
-    );
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+	
 
     if (result.rows.length === 0) {
       return NextResponse.json(
@@ -35,14 +35,14 @@ export async function POST(request: NextRequest) {
     }
 
     const user = result.rows[0];
-
     // Simple password check (In production, use bcrypt!)
-    if (user.password_hash !== password) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
+    const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+	if (!isPasswordValid) {
+	  return NextResponse.json(
+		{ success: false, message: 'Invalid credentials' },
+		{ status: 401 }
+	  );
+	}
 
     return NextResponse.json({
       success: true,
