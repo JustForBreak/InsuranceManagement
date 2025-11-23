@@ -6,7 +6,7 @@ import {
   IconDashboard,
   IconFileDescription,
   IconHelp,
-  IconInnerShadowTop,
+  IconPlus,
   IconReceipt,
   IconSearch,
   IconSettings,
@@ -28,146 +28,76 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const adminData = {
-  user: {
-    name: "Admin User",
-    email: "admin@example.com",
-    avatar: "/avatars/admin.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "Users",
-      url: "#",
-      icon: IconUsers,
-    },
-    {
-      title: "Policies",
-      url: "#",
-      icon: IconShield,
-    },
-    {
-      title: "Claims",
-      url: "#",
-      icon: IconReceipt,
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: IconChartBar,
-    },
-  ],
-  documents: [
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconFileDescription,
-    },
-    {
-      name: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-}
+// Real user comes from localStorage (set on login)
+function useCurrentUser() {
+  const [user, setUser] = React.useState<any>(null)
 
-const userData = {
-  user: {
-    name: "John Doe",
-    email: "user@example.com",
-    avatar: "/avatars/user.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: IconDashboard,
-    },
-    {
-      title: "My Policies",
-      url: "#",
-      icon: IconShield,
-    },
-    {
-      title: "My Claims",
-      url: "#",
-      icon: IconReceipt,
-    },
-    {
-      title: "Documents",
-      url: "#",
-      icon: IconFileDescription,
-    },
-  ],
-  documents: [
-    {
-      name: "Policy Documents",
-      url: "#",
-      icon: IconFileDescription,
-    },
-    {
-      name: "Claim History",
-      url: "#",
-      icon: IconReceipt,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
+  React.useEffect(() => {
+    const stored = localStorage.getItem('user')
+    if (stored) {
+      try {
+        setUser(JSON.parse(stored))
+      } catch (e) {
+        setUser(null)
+      }
+    }
+  }, [])
+
+  return user
 }
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   role?: string
 }
 
-export function AppSidebar({ role = 'user', ...props }: AppSidebarProps) {
-  const data = role === 'admin' ? adminData : userData
-  
+export function AppSidebar({ ...props }: AppSidebarProps) {
+  const user = useCurrentUser()
+
+  // If no user, show nothing (or loading)
+  if (!user) {
+    return null
+  }
+
+  const isAgent = user.role === 'agent'
+
+  const navMain = isAgent
+    ? [
+        { title: "Dashboard", url: "/dashboard", icon: IconDashboard },
+        { title: "Users", url: "/dashboard/users", icon: IconUsers },
+        { title: "Policies", url: "/dashboard/policies", icon: IconShield },
+        { title: "Claims", url: "/dashboard/claims", icon: IconReceipt },
+        { title: "Analytics", url: "/dashboard/analytics", icon: IconChartBar },
+      ]
+    : [
+        
+        { title: "My Policies", url: "/dashboard/policies", icon: IconShield },
+        { title: "My Claims", url: "/dashboard/claims", icon: IconReceipt },
+        { title: "Documents", url: "/dashboard/documents", icon: IconFileDescription },
+      ]
+
+  const documents = isAgent
+    ? [
+        { name: "Reports", url: "/dashboard/reports", icon: IconFileDescription },
+        { name: "Settings", url: "/dashboard/settings", icon: IconSettings },
+      ]
+    : [
+        { name: "Policy Documents", url: "/dashboard/documents", icon: IconFileDescription },
+        { name: "Claim History", url: "/dashboard/claims", icon: IconReceipt },
+      ]
+
+  const navSecondary = [
+    { title: "Settings", url: "/dashboard/settings", icon: IconSettings },
+    { title: "Get Help", url: "/dashboard/help", icon: IconHelp },
+    { title: "Search", url: "/dashboard/search", icon: IconSearch },
+  ]
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="#">
+            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
+              <a href="/dashboard">
                 <IconShield className="!size-5" />
                 <span className="text-base font-semibold">Insurance Portal</span>
               </a>
@@ -175,13 +105,15 @@ export function AppSidebar({ role = 'user', ...props }: AppSidebarProps) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} />
+        <NavDocuments items={documents} />
+        <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
+
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )
