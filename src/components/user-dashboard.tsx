@@ -1,5 +1,5 @@
 'use client'
-
+import { usePathname } from 'next/navigation'
 import * as React from 'react'
 import { useEffect, useState } from 'react'
 import { IconTrendingUp } from '@tabler/icons-react'
@@ -63,7 +63,7 @@ const chartConfig = {
 export function UserDashboard() {
   const [data, setData] = useState<UserData | null>(null)
   const [loading, setLoading] = useState(true)
-
+  const pathname = usePathname()
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -78,7 +78,7 @@ export function UserDashboard() {
     }
 
     fetchData()
-  }, [])
+  }, [pathname])
 
   if (loading || !data) {
     return <div className="flex items-center justify-center p-8">Loading...</div>

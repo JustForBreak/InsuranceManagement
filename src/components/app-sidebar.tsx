@@ -14,7 +14,6 @@ import {
   IconUsers,
 } from "@tabler/icons-react"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
 import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
@@ -70,9 +69,9 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       ]
     : [
         
-        { title: "My Policies", url: "/dashboard/policies", icon: IconShield },
-        { title: "My Claims", url: "/dashboard/claims", icon: IconReceipt },
-        { title: "Documents", url: "/dashboard/documents", icon: IconFileDescription },
+        { title: "My Policies", url: "/my-policies", icon: IconShield },
+        { title: "My Claims", url: "/my-claims", icon: IconReceipt },
+        { title: "Documents", url: "/documents", icon: IconFileDescription },
       ]
 
   const documents = isAgent
@@ -108,7 +107,6 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
 
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavDocuments items={documents} />
         <NavSecondary items={navSecondary} className="mt-auto" />
       </SidebarContent>
 

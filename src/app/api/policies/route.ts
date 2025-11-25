@@ -54,3 +54,22 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ policies: [] }, { status: 500 });
   }
 }
+export async function PATCH(request: NextRequest) {
+  try {
+    const { id } = await request.json();
+
+    if (!id) {
+      return NextResponse.json({ error: "Policy ID required" }, { status: 400 });
+    }
+
+    await pool.query(
+      "UPDATE policies SET status = 'cancelled' WHERE id = $1",
+      [id]
+    );
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    console.error("Cancel error:", error);
+    return NextResponse.json({ error: "Failed to cancel" }, { status: 500 });
+  }
+}

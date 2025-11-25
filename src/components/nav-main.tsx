@@ -1,6 +1,8 @@
 "use client"
 
 import { IconCirclePlusFilled, IconMail, type Icon } from "@tabler/icons-react"
+import Link from "next/link"                   // ← ADD THIS
+import { usePathname } from "next/navigation"   // ← ADD THIS
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,34 +22,44 @@ export function NavMain({
     icon?: Icon
   }[]
 }) {
+  const pathname = usePathname() // ← to highlight active state
+  
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
+        {/* QUICK CREATE BUTTON – NOW CLICKABLE & ACTIVE STATE */}
         <SidebarMenu>
-          <SidebarMenuItem className="flex items-center gap-2">
-            <SidebarMenuButton
-              tooltip="Quick Create"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
-            >
-              <IconCirclePlusFilled />
-              <span>Quick Create</span>
-            </SidebarMenuButton>
-            <Button
-              size="icon"
-              className="size-8 group-data-[collapsible=icon]:opacity-0"
-              variant="outline"
-            >
-              <IconMail />
-              <span className="sr-only">Inbox</span>
-            </Button>
+          <SidebarMenuItem>
+            <Link href="/quick-create" className="flex items-center gap-2">
+              <SidebarMenuButton
+                asChild // ← this makes the whole button clickable via Link
+                tooltip="Quick Create"
+                className={
+                  pathname === "/quick-create"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                    : "hover:bg-accent hover:text-accent-foreground"
+                }
+              >
+                <div>
+                  <IconCirclePlusFilled />
+                  <span>Quick Create</span>
+                </div>
+              </SidebarMenuButton>
+            </Link>
+
+          
           </SidebarMenuItem>
         </SidebarMenu>
+
+        {/* REST OF THE MENU */}
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton tooltip={item.title}>
-                {item.icon && <item.icon />}
-                <span>{item.title}</span>
+              <SidebarMenuButton asChild tooltip={item.title}>
+                <Link href={item.url}>
+                  {item.icon && <item.icon />}
+                  <span>{item.title}</span>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
