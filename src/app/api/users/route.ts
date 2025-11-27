@@ -1,64 +1,60 @@
 import { NextResponse } from "next/server";
-import { query } from "@/lib/db"; // Adjust path if needed
+import { Pool } from "pg";
 
-// GET /api/users
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || "5432"),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
+});
+
 export async function GET() {
-  try {
-    const users = await query(`
-      SELECT 
-        u.id,
-        u.email,
-        u.first_name,
-        u.last_name,
-        u.role,
+  try {
+    // Fetch users with credit profile
+    const usersResult = await pool.query(`
+      SELECT u.id, u.first_name, u.last_name, u.email,
+             c.credit_score, c.risk_level
+      FROM users u
+      LEFT JOIN credit_profiles c ON c.user_id = u.id
+      ORDER BY u.id
+    `);
 
-        cp.credit_score,
-        cp.risk_level,
-        cp.last_checked,
+    const users = [];
 
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id', p.id,
-              'policy_number', p.policy_number,
-              'type', p.type,
-              'coverage_amount', p.coverage_amount,
-              'premium', p.premium,
-              'start_date', p.start_date,
-              'end_date', p.end_date,
-              'status', p.status
-            )
-          ) FILTER (WHERE p.id IS NOT NULL),
-          '[]'
-        ) AS policies,
+    for (const row of usersResult.rows) {
+      // Fetch policies for each user
+      const policiesResult = await pool.query(
+        `SELECT id, policy_number, type, coverage_amount, premium, start_date, end_date, status
+         FROM policies
+         WHERE user_id = $1`,
+        [row.id]
+      );
 
-        COALESCE(
-          json_agg(
-            DISTINCT jsonb_build_object(
-              'id', c.id,
-              'claim_number', c.claim_number,
-              'amount', c.amount,
-              'description', c.description,
-              'status', c.status,
-              'filed_date', c.filed_date
-            )
-          ) FILTER (WHERE c.id IS NOT NULL),
-          '[]'
-        ) AS claims
+      // Fetch claims for each user
+      const claimsResult = await pool.query(
+        `SELECT id, claim_number, amount, description, status, filed_date, resolved_date
+         FROM claims
+         WHERE user_id = $1`,
+        [row.id]
+      );
 
-      FROM users u
-      LEFT JOIN credit_profiles cp ON cp.user_id = u.id
-      LEFT JOIN policies p ON p.user_id = u.id
-      LEFT JOIN claims c ON c.user_id = u.id
+      users.push({
+        id: row.id,
+        firstName: row.first_name,
+        lastName: row.last_name,
+        email: row.email,
+        creditScore: row.credit_score,
+        riskLevel: row.risk_level,
+        policies: policiesResult.rows,
+        claims: claimsResult.rows,
+      });
+    }
 
-      GROUP BY u.id, cp.id
-
-      ORDER BY u.id ASC;
-    `);
-
-    return NextResponse.json(users.rows);
-  } catch (err) {
-    console.error("Error fetching users:", err);
-    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
-  }
+    return NextResponse.json(users);
+  } catch (err) {
+    console.error("Failed to fetch users:", err);
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+  }
 }
