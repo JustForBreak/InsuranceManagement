@@ -37,27 +37,27 @@ const adminData = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
       title: "Users",
-      url: "#",
+      url: "/dashboard/users",
       icon: IconUsers,
     },
     {
       title: "Policies",
-      url: "#",
+      url: "/dashboard/policies",
       icon: IconShield,
     },
     {
       title: "Claims",
-      url: "#",
+      url: "/claims",
       icon: IconReceipt,
     },
     {
       title: "Analytics",
-      url: "#",
+      url: "/dashboard/credit-risk",
       icon: IconChartBar,
     },
   ],
@@ -101,22 +101,22 @@ const userData = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: IconDashboard,
     },
     {
       title: "My Policies",
-      url: "#",
+      url: "/dashboard/policies",
       icon: IconShield,
     },
     {
       title: "My Claims",
-      url: "#",
+      url: "/claims",
       icon: IconReceipt,
     },
     {
       title: "Documents",
-      url: "#",
+      url: "/dashboard",
       icon: IconFileDescription,
     },
   ],
