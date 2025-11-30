@@ -1,5 +1,5 @@
 "use client"
-
+import Link from "next/link";
 import * as React from "react"
 import {
   IconChartBar,
@@ -85,9 +85,8 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
       ]
 
   const navSecondary = [
-    { title: "Settings", url: "/dashboard/settings", icon: IconSettings },
-    { title: "Get Help", url: "/dashboard/help", icon: IconHelp },
-    { title: "Search", url: "/dashboard/search", icon: IconSearch },
+    { title: "Settings", url: "/settings", icon: IconSettings },
+    { title: "Get Help", url: "/support", icon: IconHelp },
   ]
 
   return (
@@ -96,10 +95,10 @@ export function AppSidebar({ ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="/dashboard">
+              <Link href="/dashboard">
                 <IconShield className="!size-5" />
                 <span className="text-base font-semibold">Insurance Portal</span>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
