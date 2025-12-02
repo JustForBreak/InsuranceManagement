@@ -67,11 +67,30 @@ export function UserDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch('/api/dashboard/user')
+        const storedUser = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+        if (!storedUser) {
+          setError('User not found in local storage')
+          setLoading(false)
+          return
+        }
+
+        const parsedUser = JSON.parse(storedUser) as { id: number }
+        if (!parsedUser?.id) {
+          setError('Invalid user data in local storage')
+          setLoading(false)
+          return
+        }
+
+        const response = await fetch(`/api/dashboard/user?userId=${parsedUser.id}`)
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`)
+        }
+
         const result = await response.json()
         setData(result)
       } catch (error) {
         console.error('Error fetching user data:', error)
+        setError('Failed to load dashboard data')
       } finally {
         setLoading(false)
       }
@@ -80,8 +99,16 @@ export function UserDashboard() {
     fetchData()
   }, [pathname])
 
-  if (loading || !data) {
+  if (loading) {
     return <div className="flex items-center justify-center p-8">Loading...</div>
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex items-center justify-center p-8 text-red-600">
+        {error ?? 'Unable to load dashboard'}
+      </div>
+    )
   }
 
   return (

@@ -1,107 +1,160 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import { pool } from '@/lib/db'
 
-// Mock user dashboard data
-export async function GET() {
-  await new Promise(resolve => setTimeout(resolve, 300));
+function toTitleCase(value: string | null): string {
+  if (!value) return ''
+  return value
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .join(' ')
+}
 
-  const data = {
-    stats: {
-      myPolicies: 3,
-      activeClaims: 1,
-      totalClaims: 5,
-      nextPayment: 450.00,
-      nextPaymentDate: '2024-07-15',
-      coverageTotal: 75000,
-    },
-    myPolicies: [
-      {
-        id: 'POL-2024-1001',
-        type: 'Auto',
-        status: 'Active',
-        premium: 145.00,
-        coverage: 25000,
-        startDate: '2024-01-01',
-        endDate: '2025-01-01',
-        nextPaymentDate: '2024-07-15',
-      },
-      {
-        id: 'POL-2024-1002',
-        type: 'Home',
-        status: 'Active',
-        premium: 225.00,
-        coverage: 35000,
-        startDate: '2024-02-15',
-        endDate: '2025-02-15',
-        nextPaymentDate: '2024-08-15',
-      },
-      {
-        id: 'POL-2024-1003',
-        type: 'Health',
-        status: 'Active',
-        premium: 80.00,
-        coverage: 15000,
-        startDate: '2024-03-01',
-        endDate: '2025-03-01',
-        nextPaymentDate: '2024-09-01',
-      },
-    ],
-    myClaims: [
-      {
-        id: 'CLM-2024-456',
-        policyNumber: 'POL-2024-1001',
-        type: 'Auto',
-        amount: 2500,
-        status: 'Under Review',
-        date: '2024-06-10',
-        description: 'Vehicle collision damage',
-      },
-      {
-        id: 'CLM-2024-234',
-        policyNumber: 'POL-2024-1002',
-        type: 'Home',
-        amount: 1200,
-        status: 'Approved',
-        date: '2024-05-15',
-        description: 'Water damage repair',
-      },
-      {
-        id: 'CLM-2024-123',
-        policyNumber: 'POL-2024-1003',
-        type: 'Health',
-        amount: 850,
-        status: 'Approved',
-        date: '2024-04-20',
-        description: 'Medical expenses',
-      },
-      {
-        id: 'CLM-2023-890',
-        policyNumber: 'POL-2024-1001',
-        type: 'Auto',
-        amount: 750,
-        status: 'Approved',
-        date: '2023-12-05',
-        description: 'Minor accident repair',
-      },
-      {
-        id: 'CLM-2023-678',
-        policyNumber: 'POL-2024-1002',
-        type: 'Home',
-        amount: 450,
-        status: 'Rejected',
-        date: '2023-11-12',
-        description: 'Maintenance claim',
-      },
-    ],
-    claimTrends: [
-      { month: 'Jan', approved: 0, rejected: 0, pending: 0 },
-      { month: 'Feb', approved: 0, rejected: 0, pending: 0 },
-      { month: 'Mar', approved: 0, rejected: 0, pending: 0 },
-      { month: 'Apr', approved: 1, rejected: 0, pending: 0 },
-      { month: 'May', approved: 1, rejected: 0, pending: 0 },
-      { month: 'Jun', approved: 0, rejected: 0, pending: 1 },
-    ],
-  };
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const userIdParam = searchParams.get('userId')
 
-  return NextResponse.json(data);
+    if (!userIdParam) {
+      return NextResponse.json(
+        { error: 'Missing userId in query string' },
+        { status: 400 }
+      )
+    }
+
+    const userId = parseInt(userIdParam, 10)
+    if (isNaN(userId) || userId <= 0) {
+      return NextResponse.json(
+        { error: 'Invalid userId: must be a positive integer' },
+        { status: 400 }
+      )
+    }
+
+    // Load policies for this user
+    const policiesResult = await pool.query(
+      `SELECT
+        p.id,
+        p.policy_number,
+        p.type,
+        p.coverage_amount,
+        p.premium,
+        p.start_date,
+        p.end_date,
+        p.status
+      FROM policies p
+      WHERE p.user_id = $1
+      ORDER BY p.start_date ASC`,
+      [userId]
+    )
+
+    const policies = policiesResult.rows.map((p: any) => ({
+      id: p.policy_number,
+      type: toTitleCase(p.type),
+      status: p.status ?? 'active',
+      premium: Number(p.premium ?? 0),
+      coverage: Number(p.coverage_amount ?? 0),
+      startDate: p.start_date ? new Date(p.start_date).toISOString().slice(0, 10) : '',
+      endDate: p.end_date ? new Date(p.end_date).toISOString().slice(0, 10) : '',
+      // For now we surface the next payment date as the start date;
+      // in a real system this would come from a billing schedule.
+      nextPaymentDate: p.start_date ? new Date(p.start_date).toISOString().slice(0, 10) : '',
+    }))
+
+    // Load claims for this user
+    const claimsResult = await pool.query(
+      `SELECT
+        c.id,
+        c.claim_number,
+        c.amount,
+        c.description,
+        c.status,
+        c.filed_date,
+        p.policy_number,
+        p.type as policy_type
+      FROM claims c
+      JOIN policies p ON c.policy_id = p.id
+      WHERE c.user_id = $1
+      ORDER BY c.filed_date DESC`,
+      [userId]
+    )
+
+    const claims = claimsResult.rows.map((c: any) => ({
+      id: c.claim_number,
+      policyNumber: c.policy_number,
+      type: toTitleCase(c.policy_type),
+      amount: Number(c.amount),
+      status: toTitleCase(c.status),
+      date: c.filed_date ? new Date(c.filed_date).toISOString().slice(0, 10) : '',
+      description: c.description ?? '',
+    }))
+
+    // Build simple monthly claim trends from the user's claims
+    const trendsMap = new Map<
+      string,
+      { approved: number; rejected: number; pending: number }
+    >()
+
+    for (const c of claimsResult.rows as any[]) {
+      const filed = c.filed_date ? new Date(c.filed_date) : new Date()
+      const monthLabel = filed.toLocaleString('en-US', { month: 'short' })
+
+      if (!trendsMap.has(monthLabel)) {
+        trendsMap.set(monthLabel, { approved: 0, rejected: 0, pending: 0 })
+      }
+
+      const bucket = trendsMap.get(monthLabel)!
+      if (c.status === 'approved') {
+        bucket.approved += 1
+      } else if (c.status === 'rejected') {
+        bucket.rejected += 1
+      } else {
+        bucket.pending += 1
+      }
+    }
+
+    const claimTrends = Array.from(trendsMap.entries()).map(
+      ([month, value]) => ({
+        month,
+        ...value,
+      })
+    )
+
+    const totalCoverage = policies.reduce(
+      (sum, p) => sum + Number(p.coverage || 0),
+      0
+    )
+
+    const activeClaims = (claimsResult.rows as any[]).filter((c) =>
+      ['pending', 'under_review'].includes(c.status)
+    ).length
+
+    const data = {
+      stats: {
+        myPolicies: policies.length,
+        activeClaims,
+        totalClaims: claims.length,
+        // As a simple approximation, use the sum of premiums as the "next payment"
+        nextPayment: policies.reduce(
+          (sum, p) => sum + Number(p.premium ?? 0),
+          0
+        ),
+        nextPaymentDate:
+          (policiesResult.rows[0] as any)?.start_date 
+            ? new Date((policiesResult.rows[0] as any).start_date).toISOString().slice(0, 10) 
+            : '',
+        coverageTotal: totalCoverage,
+      },
+      myPolicies: policies,
+      myClaims: claims,
+      claimTrends,
+    }
+
+    return NextResponse.json(data)
+  } catch (error) {
+    console.error('Error loading user dashboard data:', error)
+    return NextResponse.json(
+      { error: 'Failed to load user dashboard data' },
+      { status: 500 }
+    )
+  }
 }
 
