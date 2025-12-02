@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 export default function QuickCreatePage() {
   const [type, setType] = useState("auto");
@@ -72,7 +74,17 @@ export default function QuickCreatePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': 'calc(var(--spacing) * 72)',
+          '--header-height': 'calc(var(--spacing) * 12)',
+        } as React.CSSProperties
+      }
+    >
+    <div className="flex flex-row w-full">      
+    <AppSidebar variant="inset" role={"user"} />
+       <div className="flex-1 min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-2xl mx-auto">
         <Card className="shadow-lg">
           <div className="p-8">
@@ -118,5 +130,8 @@ export default function QuickCreatePage() {
         </Card>
       </div>
     </div>
+    </div>
+    </SidebarProvider>
+   
   );
 }

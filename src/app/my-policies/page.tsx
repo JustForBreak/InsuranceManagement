@@ -5,8 +5,9 @@ import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogTitle, 
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { IconFileText, IconCalendar, IconShieldCheck, IconCurrencyDollar, IconCar, IconHome, IconHeart } from "@tabler/icons-react";
-
+import { AppSidebar } from "@/components/app-sidebar";
 import { Button } from "@/components/ui/button";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -57,13 +58,23 @@ export default function MyPoliciesPage() {
   if (loading) return <div className="p-12 text-center">Loading...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': 'calc(var(--spacing) * 72)',
+          '--header-height': 'calc(var(--spacing) * 12)',
+        } as React.CSSProperties
+      }
+    >
+    <div className="flex flex-row w-full">  
+    <AppSidebar variant="inset" role={"user"} />
+    <div className="flex-1 min-h-screen bg-gray-50 py-12 px-4">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-4xl font-bold mb-2">My Policies</h1>
         <p className="text-muted-foreground mb-8">
           You have <strong>{policies.length}</strong> active insurance {policies.length === 1 ? "policy" : "policies"}
         </p>
-
+        </div>
         {policies.length === 0 ? (
           <Card className="text-center py-20">
             <CardContent>
@@ -168,5 +179,7 @@ export default function MyPoliciesPage() {
         )}
       </div>
     </div>
+    
+    </SidebarProvider>
   );
 }

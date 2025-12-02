@@ -1,6 +1,7 @@
 // src/app/support/page.tsx
 "use client";
-
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,17 @@ export default function SupportPage() {
   };
 
   return (
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': 'calc(var(--spacing) * 72)',
+          '--header-height': 'calc(var(--spacing) * 12)',
+        } as React.CSSProperties
+      }
+    >
+    <div className="flex flex-row w-full">      
+    <AppSidebar variant="inset" role={"user"} />
+       <div className="flex-1 min-h-screen bg-gray-50 py-12 px-4">
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-6xl mx-auto space-y-10">
 
@@ -174,5 +186,8 @@ export default function SupportPage() {
         </Card>
       </div>
     </div>
+    </div>
+    </div>
+    </SidebarProvider>
   );
 }

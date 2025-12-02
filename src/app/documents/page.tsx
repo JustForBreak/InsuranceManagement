@@ -8,7 +8,8 @@ import {
   IconShieldCheck, IconChevronDown, IconChevronRight,
   IconCar, IconHome, IconHeart
 } from "@tabler/icons-react";
-
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -85,6 +86,17 @@ export default function DocumentsPage() {
   if (loading) return <div className="p-12 text-center">Loading documents...</div>;
 
   return (
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': 'calc(var(--spacing) * 72)',
+          '--header-height': 'calc(var(--spacing) * 12)',
+        } as React.CSSProperties
+      }
+    >
+    <div className="flex flex-row w-full"> 
+    <AppSidebar variant="inset" role={"user"} />
+    <div className="flex-1 min-h-screen bg-gray-50 py-12 px-4">
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-8">
         <div>
@@ -171,5 +183,8 @@ export default function DocumentsPage() {
         )}
       </div>
     </div>
+    </div>
+    </div>
+    </SidebarProvider>
   );
 }

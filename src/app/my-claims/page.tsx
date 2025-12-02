@@ -19,7 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 interface Claim {
   id: number;
   claim_number: string;
@@ -88,7 +89,18 @@ export default function MyClaimsPage() {
   if (loading) return <div className="p-12 text-center text-lg">Loading your claims...</div>;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <SidebarProvider
+      style={
+        {
+          '--sidebar-width': 'calc(var(--spacing) * 72)',
+          '--header-height': 'calc(var(--spacing) * 12)',
+        } as React.CSSProperties
+      }
+    >
+      <div className="flex flex-row w-full">
+      <AppSidebar variant="inset" role={"user"} />
+      <div className="flex-1 min-h-screen bg-gray-50 py-12 px-4">
+      <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-7xl mx-auto space-y-10">
 
         <div>
@@ -199,5 +211,9 @@ export default function MyClaimsPage() {
         </Card>
       </div>
     </div>
+    </div>
+    </div>
+</SidebarProvider>
+    
   );
 }

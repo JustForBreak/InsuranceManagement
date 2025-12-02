@@ -1,10 +1,9 @@
 "use client"
 
-import { IconCirclePlusFilled, IconMail, type Icon } from "@tabler/icons-react"
-import Link from "next/link"                   // ← ADD THIS
-import { usePathname } from "next/navigation"   // ← ADD THIS
+import { IconCirclePlusFilled, type Icon } from "@tabler/icons-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -22,23 +21,24 @@ export function NavMain({
     icon?: Icon
   }[]
 }) {
-  const pathname = usePathname() // ← to highlight active state
-  
+  const pathname = usePathname()
+
   return (
     <SidebarGroup>
       <SidebarGroupContent className="flex flex-col gap-2">
-        {/* QUICK CREATE BUTTON – NOW CLICKABLE & ACTIVE STATE */}
+        {/* QUICK CREATE */}
         <SidebarMenu>
           <SidebarMenuItem>
             <Link href="/quick-create" className="flex items-center gap-2">
               <SidebarMenuButton
-                asChild // ← this makes the whole button clickable via Link
+                asChild
                 tooltip="Quick Create"
                 className={
                   pathname === "/quick-create"
                     ? "bg-primary text-primary-foreground hover:bg-primary/90"
                     : "hover:bg-accent hover:text-accent-foreground"
                 }
+                // ← NO onClick → sidebar stays open!
               >
                 <div>
                   <IconCirclePlusFilled />
@@ -46,12 +46,10 @@ export function NavMain({
                 </div>
               </SidebarMenuButton>
             </Link>
-
-          
           </SidebarMenuItem>
         </SidebarMenu>
 
-        {/* REST OF THE MENU */}
+        {/* MAIN MENU ITEMS */}
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
