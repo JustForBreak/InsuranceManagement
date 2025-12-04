@@ -1,22 +1,17 @@
 "use client"
 
 import * as React from "react"
+import { useEffect, useState } from "react"
 import {
   IconChartBar,
   IconDashboard,
-  IconFileDescription,
   IconHelp,
-  IconInnerShadowTop,
   IconReceipt,
-  IconSearch,
-  IconSettings,
   IconShield,
   IconUsers,
 } from "@tabler/icons-react"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -28,135 +23,110 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const adminData = {
-  user: {
-    name: "Admin User",
-    email: "admin@example.com",
-    avatar: "/avatars/admin.jpg",
+const adminNavMain = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: IconDashboard,
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Users",
-      url: "/dashboard/users",
-      icon: IconUsers,
-    },
-    {
-      title: "Policies",
-      url: "/dashboard/policies",
-      icon: IconShield,
-    },
-    {
-      title: "Claims",
-      url: "/claims",
-      icon: IconReceipt,
-    },
-    {
-      title: "Analytics",
-      url: "/dashboard/credit-risk",
-      icon: IconChartBar,
-    },
-  ],
-  documents: [
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconFileDescription,
-    },
-    {
-      name: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-}
+  {
+    title: "Users",
+    url: "/dashboard/users",
+    icon: IconUsers,
+  },
+  {
+    title: "Policies",
+    url: "/dashboard/policies",
+    icon: IconShield,
+  },
+  {
+    title: "Claims",
+    url: "/claims",
+    icon: IconReceipt,
+  },
+  {
+    title: "Analytics",
+    url: "/dashboard/credit-risk",
+    icon: IconChartBar,
+  },
+]
 
-const userData = {
-  user: {
-    name: "John Doe",
-    email: "user@example.com",
-    avatar: "/avatars/user.jpg",
+const userNavMain = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: IconDashboard,
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "My Policies",
-      url: "/dashboard/policies",
-      icon: IconShield,
-    },
-    {
-      title: "My Claims",
-      url: "/claims",
-      icon: IconReceipt,
-    },
-    {
-      title: "Documents",
-      url: "/dashboard",
-      icon: IconFileDescription,
-    },
-  ],
-  documents: [
-    {
-      name: "Policy Documents",
-      url: "#",
-      icon: IconFileDescription,
-    },
-    {
-      name: "Claim History",
-      url: "#",
-      icon: IconReceipt,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-}
+  {
+    title: "My Policies",
+    url: "/dashboard/policies",
+    icon: IconShield,
+  },
+  {
+    title: "My Claims",
+    url: "/claims",
+    icon: IconReceipt,
+  },
+]
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   role?: string
+  onQuickCreate?: () => void
 }
 
-export function AppSidebar({ role = 'user', ...props }: AppSidebarProps) {
-  const data = role === 'admin' ? adminData : userData
+// Helper function to generate initials from name
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length === 0) return "U"
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+}
+
+export function AppSidebar({ role = 'user', onQuickCreate, ...props }: AppSidebarProps) {
+  const [user, setUser] = useState<{ name: string; email: string; avatar: string; initials: string } | null>(null)
+
+  useEffect(() => {
+    // Load user from localStorage
+    const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null
+    if (userData) {
+      try {
+        const parsedUser = JSON.parse(userData)
+        // Login API returns 'name' field, but also check for firstName/lastName as fallback
+        const userName = parsedUser.name || 
+          `${parsedUser.firstName || ''} ${parsedUser.lastName || ''}`.trim() || 
+          parsedUser.email?.split('@')[0] || 
+          'User'
+        const userEmail = parsedUser.email || ''
+        const initials = getInitials(userName)
+        
+        setUser({
+          name: userName,
+          email: userEmail,
+          avatar: `/avatars/${parsedUser.role || 'user'}.jpg`,
+          initials: initials,
+        })
+      } catch (e) {
+        console.error('Error parsing user data:', e)
+        // Fallback to default
+        setUser({
+          name: 'User',
+          email: '',
+          avatar: '/avatars/user.jpg',
+          initials: 'U',
+        })
+      }
+    } else {
+      // Fallback to default
+      setUser({
+        name: 'User',
+        email: '',
+        avatar: '/avatars/user.jpg',
+        initials: 'U',
+      })
+    }
+  }, [])
+
+  const navMain = role === 'admin' ? adminNavMain : userNavMain
   
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -167,7 +137,7 @@ export function AppSidebar({ role = 'user', ...props }: AppSidebarProps) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
+              <a href="/dashboard">
                 <IconShield className="!size-5" />
                 <span className="text-base font-semibold">Insurance Portal</span>
               </a>
@@ -176,12 +146,10 @@ export function AppSidebar({ role = 'user', ...props }: AppSidebarProps) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} onQuickCreate={onQuickCreate} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {user && <NavUser user={user} />}
       </SidebarFooter>
     </Sidebar>
   )

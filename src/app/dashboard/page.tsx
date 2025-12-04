@@ -58,6 +58,10 @@ function DashboardContent() {
   // Map agent/customer to admin/user for dashboard components
   const dashboardRole = user.role === 'agent' ? 'admin' : 'user'
 
+  const handleQuickCreate = () => {
+    router.push('/claims?create=true')
+  }
+
   return (
     <SidebarProvider
       style={
@@ -67,7 +71,7 @@ function DashboardContent() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant="inset" role={dashboardRole} />
+      <AppSidebar variant="inset" role={dashboardRole} onQuickCreate={handleQuickCreate} />
       <SidebarInset>
         <SiteHeader role={dashboardRole} />
         <div className="flex flex-1 flex-col">

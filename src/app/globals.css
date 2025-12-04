@@ -120,3 +120,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Sonner toast text color override */
+[data-sonner-toast] {
+  color: #000000 !important;
+}
+
+[data-sonner-toast] * {
+  color: #000000 !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: #000000 !important;
+}
+
+[data-sonner-toast] [data-title] {
+  color: #000000 !important;
+}

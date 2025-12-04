@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useEffect, useState } from 'react'
+import { useTheme } from 'next-themes'
 import { IconTrendingUp } from '@tabler/icons-react'
 import { Area, AreaChart, CartesianGrid, XAxis, Pie, PieChart, Cell } from 'recharts'
 import { Badge } from '@/components/ui/badge'
@@ -35,6 +36,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import dynamic from 'next/dynamic'
+
+const Chart = dynamic(() => import('react-apexcharts'), { ssr: false })
 
 interface AdminData {
   stats: {
@@ -66,8 +70,40 @@ const chartConfig = {
 } satisfies ChartConfig
 
 export function AdminDashboard() {
+  const { theme, resolvedTheme } = useTheme()
   const [data, setData] = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Helper function to get CSS variable value
+  const getCSSVariable = (varName: string): string => {
+    if (typeof window === 'undefined') return ''
+    return getComputedStyle(document.documentElement)
+      .getPropertyValue(varName)
+      .trim()
+  }
+
+  // Get actual color values from CSS variables
+  const getChartColors = () => {
+    if (!mounted) return { chart1: '#8884d8', chart2: '#82ca9d', chart3: '#ffc658', chart4: '#ff7300' }
+    
+    return {
+      chart1: getCSSVariable('--chart-1') || 'oklch(0.646 0.222 41.116)',
+      chart2: getCSSVariable('--chart-2') || 'oklch(0.6 0.118 184.704)',
+      chart3: getCSSVariable('--chart-3') || 'oklch(0.398 0.07 227.392)',
+      chart4: getCSSVariable('--chart-4') || 'oklch(0.828 0.189 84.429)',
+    }
+  }
+
+  const chartColors = getChartColors()
+  
+  // Define colors for claim trends
+  const approvedColor = '#22c55e' // green-500
+  const rejectedColor = '#ef4444' // red-500
 
   useEffect(() => {
     const fetchData = async () => {
@@ -85,23 +121,42 @@ export function AdminDashboard() {
     fetchData()
   }, [])
 
+  // Determine theme mode - fallback to checking document class if theme is not available
+  const isDarkMode = mounted && (
+    resolvedTheme === 'dark' || 
+    (typeof window !== 'undefined' && document.documentElement.classList.contains('dark'))
+  )
+
   if (loading || !data) {
     return <div className="flex items-center justify-center p-8">Loading...</div>
   }
 
   return (
-    <Tabs defaultValue="overview" className="flex flex-col gap-4">
-      <TabsList className="sticky top-[var(--header-height)] z-10 bg-background/80 backdrop-blur px-4 lg:px-6">
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="users">Users</TabsTrigger>
-        <TabsTrigger value="policies">Policies</TabsTrigger>
-        <TabsTrigger value="credit-risk">Credit Risk</TabsTrigger>
-      </TabsList>
+    <div className="flex flex-col gap-6">
+      {/* Admin Dashboard Header */}
+      <div className="px-4 lg:px-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Admin Dashboard</h1>
+            <p className="text-muted-foreground mt-1">
+              Comprehensive overview of your insurance management system
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <Tabs defaultValue="overview" className="flex flex-col gap-4">
+        <TabsList className="sticky top-[var(--header-height)] z-10 bg-background/80 backdrop-blur px-4 lg:px-6">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="users">Users</TabsTrigger>
+          <TabsTrigger value="policies">Policies</TabsTrigger>
+          <TabsTrigger value="credit-risk">Credit Risk</TabsTrigger>
+        </TabsList>
 
       <TabsContent value="overview" className="space-y-6">
         {/* Stats Cards */}
         <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-          <Card className="@container/card">
+          <Card className="@container/card border-l-4 border-l-blue-500">
             <CardHeader>
               <CardDescription>Total Users</CardDescription>
               <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
@@ -122,7 +177,7 @@ export function AdminDashboard() {
             </CardFooter>
           </Card>
 
-          <Card className="@container/card">
+          <Card className="@container/card border-l-4 border-l-emerald-500">
             <CardHeader>
               <CardDescription>Active Policies</CardDescription>
               <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
@@ -143,7 +198,7 @@ export function AdminDashboard() {
             </CardFooter>
           </Card>
 
-          <Card className="@container/card">
+          <Card className="@container/card border-l-4 border-l-amber-500">
             <CardHeader>
               <CardDescription>Total Claims</CardDescription>
               <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
@@ -163,7 +218,7 @@ export function AdminDashboard() {
             </CardFooter>
           </Card>
 
-          <Card className="@container/card">
+          <Card className="@container/card border-l-4 border-l-purple-500">
             <CardHeader>
               <CardDescription>Monthly Revenue</CardDescription>
               <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
@@ -189,75 +244,112 @@ export function AdminDashboard() {
         <AdminCreditManagement />
 
         {/* Charts Section */}
-        <div className="grid gap-4 px-4 lg:px-6 md:grid-cols-2">
-          <Card>
+        <div className="grid gap-6 px-4 lg:px-6 md:grid-cols-2">
+          <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle>Claim Trends</CardTitle>
-              <CardDescription>Monthly claim statistics</CardDescription>
+              <CardTitle className="text-xl">Claim Trends</CardTitle>
+              <CardDescription>Monthly claim statistics and approval rates</CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={chartConfig}>
-                <AreaChart
-                  accessibilityLayer
-                  data={data.claimTrends}
-                  margin={{
-                    left: 12,
-                    right: 12,
+              {mounted && data.claimTrends && data.claimTrends.length > 0 ? (
+                <Chart
+                  options={{
+                    chart: {
+                      type: 'area',
+                      stacked: true,
+                      fontFamily: 'inherit',
+                      toolbar: { show: false },
+                      zoom: { enabled: false },
+                    },
+                    dataLabels: {
+                      enabled: false,
+                    },
+                    stroke: {
+                      curve: 'smooth',
+                      width: 2,
+                    },
+                    xaxis: {
+                      categories: data.claimTrends.map((item) => item.month),
+                      labels: {
+                        style: {
+                          colors: isDarkMode ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
+                          fontFamily: 'inherit',
+                        },
+                      },
+                      axisBorder: {
+                        show: false,
+                      },
+                      axisTicks: {
+                        show: false,
+                      },
+                    },
+                    yaxis: {
+                      labels: {
+                        style: {
+                          colors: isDarkMode ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
+                          fontFamily: 'inherit',
+                        },
+                      },
+                    },
+                    fill: {
+                      type: 'gradient',
+                      gradient: {
+                        opacityFrom: 0.4,
+                        opacityTo: 0.1,
+                        stops: [0, 100],
+                      },
+                    },
+                    colors: [
+                      approvedColor,
+                      rejectedColor,
+                    ],
+                    legend: {
+                      position: 'bottom',
+                      fontSize: '12px',
+                      fontFamily: 'inherit',
+                      labels: {
+                        colors: isDarkMode ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
+                      },
+                    },
+                    grid: {
+                      borderColor: isDarkMode ? 'hsl(var(--border))' : 'hsl(var(--border))',
+                      strokeDashArray: 4,
+                      xaxis: {
+                        lines: {
+                          show: false,
+                        },
+                      },
+                      yaxis: {
+                        lines: {
+                          show: true,
+                        },
+                      },
+                    },
+                    tooltip: {
+                      theme: isDarkMode ? 'dark' : 'light',
+                    },
+                    theme: {
+                      mode: isDarkMode ? 'dark' : 'light',
+                    },
                   }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                  />
-                  <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                  <defs>
-                    <linearGradient id="fillApproved" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="var(--color-approved)"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="var(--color-approved)"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                    <linearGradient id="fillRejected" x1="0" y1="0" x2="0" y2="1">
-                      <stop
-                        offset="5%"
-                        stopColor="var(--color-rejected)"
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="95%"
-                        stopColor="var(--color-rejected)"
-                        stopOpacity={0.1}
-                      />
-                    </linearGradient>
-                  </defs>
-                  <Area
-                    dataKey="approved"
-                    type="natural"
-                    fill="url(#fillApproved)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-approved)"
-                    stackId="a"
-                  />
-                  <Area
-                    dataKey="rejected"
-                    type="natural"
-                    fill="url(#fillRejected)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-rejected)"
-                    stackId="a"
-                  />
-                  <ChartLegend content={<ChartLegendContent />} />
-                </AreaChart>
-              </ChartContainer>
+                  series={[
+                    {
+                      name: 'Approved',
+                      data: data.claimTrends.map((item) => item.approved),
+                    },
+                    {
+                      name: 'Rejected',
+                      data: data.claimTrends.map((item) => item.rejected),
+                    },
+                  ]}
+                  type="area"
+                  height={300}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                  {loading ? 'Loading...' : 'No claim trends data available'}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -266,47 +358,84 @@ export function AdminDashboard() {
               <CardTitle>Policy Distribution</CardTitle>
               <CardDescription>Active policies by type</CardDescription>
             </CardHeader>
-            <CardContent className="flex items-center justify-center">
-              <ChartContainer
-                config={{
-                  count: {
-                    label: 'Policies',
-                  },
-                }}
-                className="mx-auto aspect-square max-h-[250px]"
-              >
-                <PieChart>
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent hideLabel />}
+            <CardContent className="flex items-center justify-center min-h-[300px]">
+              {mounted && data.policyDistribution && data.policyDistribution.length > 0 ? (
+                <div className="mx-auto aspect-square max-h-[280px] w-full">
+                  <Chart
+                    options={{
+                      chart: {
+                        type: 'donut',
+                        fontFamily: 'inherit',
+                      },
+                      labels: data.policyDistribution.map((item) => item.type),
+                      colors: data.policyDistribution.map((item, index) => {
+                        // Use fill from data if available, otherwise use chart colors
+                        if (item.fill && !item.fill.includes('var(')) {
+                          return item.fill
+                        }
+                        const colorIndex = (index % 4) + 1
+                        return colorIndex === 1 ? chartColors.chart1 :
+                               colorIndex === 2 ? chartColors.chart2 :
+                               colorIndex === 3 ? chartColors.chart3 :
+                               chartColors.chart4
+                      }),
+                      dataLabels: {
+                        enabled: false,
+                      },
+                      legend: {
+                        position: 'bottom',
+                        fontSize: '12px',
+                        fontFamily: 'inherit',
+                        labels: {
+                          colors: isDarkMode ? 'hsl(var(--foreground))' : 'hsl(var(--foreground))',
+                        },
+                      },
+                      tooltip: {
+                        custom: function ({ series, seriesIndex, w }) {
+                          const policyItem = data.policyDistribution[seriesIndex];
+                          return `
+                            <div class="flex flex-col gap-0.5 p-2">
+                              <span class="font-semibold">${policyItem.type}: ${series[seriesIndex]} policies</span>
+                              <span class="text-muted-foreground text-xs">${policyItem.count} total</span>
+                            </div>
+                          `;
+                        },
+                        theme: isDarkMode ? 'dark' : 'light',
+                      },
+                      plotOptions: {
+                        pie: {
+                          donut: {
+                            size: '60%',
+                          },
+                        },
+                      },
+                      theme: {
+                        mode: isDarkMode ? 'dark' : 'light',
+                      },
+                    }}
+                    series={data.policyDistribution.map((item) => item.value)}
+                    type="donut"
+                    height={280}
                   />
-                  <Pie
-                    data={data.policyDistribution}
-                    dataKey="value"
-                    nameKey="type"
-                    innerRadius={60}
-                    strokeWidth={5}
-                  >
-                    {data.policyDistribution.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <ChartLegend
-                    content={<ChartLegendContent nameKey="type" />}
-                    className="-translate-y-2 flex-wrap gap-2 [&>*]:basis-1/4 [&>*]:justify-center"
-                  />
-                </PieChart>
-              </ChartContainer>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-12">
+                  <div className="text-4xl mb-4">📊</div>
+                  <p className="text-muted-foreground">
+                    {loading ? 'Loading...' : 'No policy data available'}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Recent Claims Table */}
         <div className="px-4 lg:px-6">
-          <Card>
+          <Card className="shadow-sm">
             <CardHeader>
-              <CardTitle>Recent Claims</CardTitle>
-              <CardDescription>Latest claim submissions</CardDescription>
+              <CardTitle className="text-xl">Recent Claims</CardTitle>
+              <CardDescription>Latest claim submissions requiring attention</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -321,28 +450,49 @@ export function AdminDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {data.recentClaims.map((claim) => (
-                    <TableRow key={claim.id}>
-                      <TableCell className="font-medium">{claim.id}</TableCell>
-                      <TableCell>{claim.customer}</TableCell>
-                      <TableCell>{claim.type}</TableCell>
-                      <TableCell>${claim.amount.toLocaleString()}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            claim.status === 'Approved'
-                              ? 'default'
-                              : claim.status === 'Pending'
-                              ? 'outline'
-                              : 'secondary'
-                          }
-                        >
-                          {claim.status}
-                        </Badge>
+                  {data.recentClaims.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                        No recent claims found
                       </TableCell>
-                      <TableCell>{claim.date}</TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    data.recentClaims.map((claim) => (
+                      <TableRow key={claim.id} className="hover:bg-muted/50">
+                        <TableCell className="font-medium font-mono">{claim.id}</TableCell>
+                        <TableCell className="font-medium">{claim.customer}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{claim.type}</Badge>
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          ${claim.amount.toLocaleString()}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant={
+                              claim.status === 'Approved'
+                                ? 'default'
+                                : claim.status === 'Pending'
+                                ? 'outline'
+                                : claim.status === 'Under Review'
+                                ? 'secondary'
+                                : 'destructive'
+                            }
+                            className={
+                              claim.status === 'Approved'
+                                ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400'
+                                : claim.status === 'Pending'
+                                ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400'
+                                : ''
+                            }
+                          >
+                            {claim.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">{claim.date}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -362,5 +512,6 @@ export function AdminDashboard() {
         <CreditRiskTab />
       </TabsContent>
     </Tabs>
+    </div>
   )
 }

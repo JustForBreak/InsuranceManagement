@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -133,23 +134,39 @@ export function RegisterForm({
               </Field>
 
               <Field>
-                <FieldLabel htmlFor="role">Account Type</FieldLabel>
-                <Select 
-                  value={formData.role} 
-                  onValueChange={(value) => setFormData({...formData, role: value})}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder="Select account type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="customer">Customer</SelectItem>
-                    <SelectItem value="agent">Agent</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FieldDescription>
-                  Choose customer for personal insurance or agent for managing policies
-                </FieldDescription>
+                <div className="space-y-3">
+                  <div>
+                    <FieldLabel htmlFor="role" className="text-base font-semibold text-foreground mb-2 block">
+                      Account Type
+                    </FieldLabel>
+                    <FieldDescription className="text-sm mb-3">
+                      Choose customer for personal insurance or agent for managing policies
+                    </FieldDescription>
+                  </div>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-primary/5 dark:bg-primary/10 rounded-lg border-2 border-primary/20 -z-10" />
+                    <Select 
+                      value={formData.role} 
+                      onValueChange={(value) => setFormData({...formData, role: value})}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger 
+                        id="role" 
+                        className="h-14 text-base font-medium bg-background/80 backdrop-blur-sm border-2 border-primary/30 hover:border-primary/50 focus:border-primary shadow-sm"
+                      >
+                        <SelectValue placeholder="Select account type" />
+                      </SelectTrigger>
+                      <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                        <SelectItem value="customer" className="text-base font-medium py-3">
+                          Customer
+                        </SelectItem>
+                        <SelectItem value="agent" className="text-base font-medium py-3">
+                          Agent
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </Field>
               
               <Field>
@@ -167,18 +184,56 @@ export function RegisterForm({
             </FieldGroup>
           </form>
           
-          <div className="bg-muted relative hidden md:block">
-            <div className="absolute inset-0 flex items-center justify-center p-8">
-              <div className="text-center space-y-4">
-                <div className="text-6xl">📋</div>
+          <div className="bg-muted relative hidden md:block overflow-hidden">
+            {/* Background image */}
+            <div className="absolute inset-0">
+              <Image 
+                src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&h=1200&fit=crop&q=80" 
+                alt="Team collaboration" 
+                fill
+                className="object-cover opacity-20"
+                unoptimized
+              />
+            </div>
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5" />
+            
+            <div className="relative z-10 flex flex-col items-center justify-center p-8 h-full min-h-[500px]">
+              {/* Main image */}
+              <div className="mb-6 rounded-2xl overflow-hidden shadow-lg border-2 border-primary/20 relative w-full max-w-sm h-64">
+                <Image 
+                  src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400&h=300&fit=crop&q=80" 
+                  alt="Insurance benefits" 
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
+              
+              <div className="text-center space-y-4 max-w-md">
                 <h2 className="text-2xl font-bold">Join Our Platform</h2>
                 <p className="text-muted-foreground">
                   Manage your insurance policies with ease and confidence
                 </p>
-                <div className="space-y-2 text-sm text-muted-foreground">
-                  <p>✓ Secure policy management</p>
-                  <p>✓ Easy claim submissions</p>
-                  <p>✓ 24/7 access to your data</p>
+                <div className="space-y-3 text-sm text-muted-foreground pt-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Secure policy management</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Easy claim submissions</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>24/7 access to your data</span>
+                  </div>
                 </div>
               </div>
             </div>
