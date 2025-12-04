@@ -21,4 +21,3 @@ function Textarea({
 }
 
 export { Textarea }
-

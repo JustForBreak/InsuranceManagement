@@ -1,5 +1,6 @@
+// src/app/api/claims/route.ts
 import { NextResponse } from "next/server";
-import { pool } from "@/lib/db";
+import pool from "@/lib/db";
 
 export async function GET(req: Request) {
   try {
@@ -85,7 +86,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Generate claim number
     const claimNumberResult = await pool.query(
       `SELECT COUNT(*) + 1 as next_num FROM claims WHERE EXTRACT(YEAR FROM filed_date) = EXTRACT(YEAR FROM CURRENT_DATE)`
     );
@@ -93,7 +93,6 @@ export async function POST(req: Request) {
     const year = new Date().getFullYear();
     const claimNumber = `CLM-${year}-${String(nextNum).padStart(3, "0")}`;
 
-    // Verify policy belongs to user
     const policyCheck = await pool.query(
       `SELECT id FROM policies WHERE id = $1 AND user_id = $2`,
       [policyId, userId]
@@ -120,7 +119,6 @@ export async function POST(req: Request) {
   }
 }
 
-// PATCH /api/claims?id=123
 export async function PATCH(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -136,7 +134,6 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
-    // Update status and set resolved_date if approved or rejected
     const updateQuery =
       newStatus === "approved" || newStatus === "rejected"
         ? `UPDATE claims SET status = $1, resolved_date = CURRENT_DATE, updated_at = CURRENT_TIMESTAMP WHERE id = $2`

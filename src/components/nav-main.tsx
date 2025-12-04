@@ -1,11 +1,9 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { IconCirclePlusFilled, type Icon } from "@tabler/icons-react"
-import { useRouter } from "next/navigation"
 
-import { Button } from "@/components/ui/button"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -32,7 +30,6 @@ export function NavMain({
     if (onQuickCreate) {
       onQuickCreate()
     } else {
-      // Navigate to claims page with create param
       router.push("/claims?create=true")
     }
   }
@@ -54,8 +51,6 @@ export function NavMain({
         </SidebarMenu>
         <SidebarMenu>
           {items.map((item) => {
-            // For dashboard, only exact match
-            // For other routes, check if pathname starts with the URL
             const isActive = item.url === "/dashboard" 
               ? pathname === item.url
               : pathname === item.url || pathname.startsWith(item.url + "/")

@@ -5,7 +5,6 @@ import { useEffect, useState } from "react"
 import {
   IconChartBar,
   IconDashboard,
-  IconHelp,
   IconReceipt,
   IconShield,
   IconUsers,
@@ -74,7 +73,6 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onQuickCreate?: () => void
 }
 
-// Helper function to generate initials from name
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/)
   if (parts.length === 0) return "U"
@@ -86,12 +84,10 @@ export function AppSidebar({ role = 'user', onQuickCreate, ...props }: AppSideba
   const [user, setUser] = useState<{ name: string; email: string; avatar: string; initials: string } | null>(null)
 
   useEffect(() => {
-    // Load user from localStorage
     const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null
     if (userData) {
       try {
         const parsedUser = JSON.parse(userData)
-        // Login API returns 'name' field, but also check for firstName/lastName as fallback
         const userName = parsedUser.name || 
           `${parsedUser.firstName || ''} ${parsedUser.lastName || ''}`.trim() || 
           parsedUser.email?.split('@')[0] || 
@@ -107,7 +103,6 @@ export function AppSidebar({ role = 'user', onQuickCreate, ...props }: AppSideba
         })
       } catch (e) {
         console.error('Error parsing user data:', e)
-        // Fallback to default
         setUser({
           name: 'User',
           email: '',
@@ -116,7 +111,6 @@ export function AppSidebar({ role = 'user', onQuickCreate, ...props }: AppSideba
         })
       }
     } else {
-      // Fallback to default
       setUser({
         name: 'User',
         email: '',

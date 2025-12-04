@@ -45,15 +45,15 @@ export async function POST(request: NextRequest) {
 	}
 
     return NextResponse.json({
-      success: true,
-      message: 'Login successful',
-      user: {
-        id: user.id,
-        email: user.email,
-        name: `${user.first_name} ${user.last_name}`,
-        role: user.role
-      }
-    });
+	  success: true,
+	  message: 'Login successful',
+	  user: { id: user.id, email: user.email, name: `${user.first_name} ${user.last_name}`, role: user.role }
+	}, {
+	  status: 200,
+	  headers: {
+		'Set-Cookie': `user=${JSON.stringify({ id: user.id, email: user.email, role: user.role })}; Path=/; HttpOnly; SameSite=Lax`
+	  }
+	});
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(
