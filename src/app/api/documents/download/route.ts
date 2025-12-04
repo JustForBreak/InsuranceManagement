@@ -85,8 +85,9 @@ export async function GET(request: Request) {
 
     // Generate PDF
     const pdfBytes = await pdfDoc.save();
+    const pdfBuffer = Buffer.from(pdfBytes);
 
-    return new NextResponse(pdfBytes, {
+    return new NextResponse(pdfBuffer, {
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${policy.policy_number} - ${title}.pdf"`,
